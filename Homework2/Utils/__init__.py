@@ -1,0 +1,1 @@
+from .Funcs import getSpeed
