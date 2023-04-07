@@ -1,10 +1,118 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
+{% extends 'base.html' %}
+<style>
+  input[type=checkbox]:checked {
+    text-decoration: line-through;
+  }
+</style>
 
-</body>
-</html>
+{% block title -%}
+  Task list
+{%- endblock %}
+
+{% block body %}
+  <h1>Task list</h1>
+  <div class="alert alert-info" role="alert">
+    You have a <b> {{tasks|length}} </b> undone tasks! Let's go!
+  </div>
+  <div class="row">
+    <div class="col-md-12">
+      <form>
+           <div class="input-group">
+            <input type="text" id="new-item" placeholder="Enter a new item" class="form-control">
+            <button id="add-btn" type="button" class="btn btn-success">add</button>
+        </div>
+      </form>
+      <ul class="list-group">
+        {% for tasks_id in tasks %}
+          <li class="list-group-item d-flex justify-content-between align-items-center">
+            <div>
+              <input type="checkbox" class="chkbox" id="chk-task{{tasks_id}}" name="task{{tasks_id}}" num="{{tasks_id}}" {% if tasks[tasks_id].isDone %} checked {% endif %}>
+              <label for="task{{tasks_id}}" {% if tasks[tasks_id].isDone %} style="text-decoration: line-through; color: gray;" {% endif %}>{{ tasks[tasks_id].name }}</label>
+            </div>
+            <button type="button" class="btn btn-danger btn-sm" id="btn-del-{{tasks_id}}" num="{{tasks_id}}">Delete</button>
+          </li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+
+{% endblock %}
+
+{% block after_body %}
+  <script>
+    $(document).ready(function() {
+    $('#new-item').keypress(function(event) {
+      if (event.keyCode == 13) {
+        event.preventDefault();
+        $('#add-btn').click();
+      }
+    });
+  });
+
+    $(function() {
+      $('#add-btn').click(function () {
+       $.ajax({
+                type: 'POST',
+                data: {
+                    data : $('#new-item').val()
+                },
+                success: function(response) {
+                    console.log(response);
+                }
+            })
+       $('#new-item').val('');
+       location.reload();
+      })
+    });
+
+  $(function(){
+    $('.btn-danger').click(function(){
+        var id_task = $(this).attr('num');
+        $.ajax({
+                url: '/todolist/' + id_task,
+                type: 'DELETE',
+                success: function(result) {
+                    console.log('Успешно удалено!');
+                    location.reload();
+                }
+            });
+
+    });
+  });
+
+  $(function(){
+    $('.chkbox').click(function(){
+        if($(this).prop("checked") == true){
+            var id_task = $(this).attr('num');
+            $.ajax({
+                url: '/todolist/' + id_task,
+                type: 'POST',
+                data: {
+                    isDone : '1'
+                },
+                success: function(response) {
+                    console.log(response);
+                    location.reload();
+                }
+            })
+        }
+        else if($(this).prop("checked") == false){
+            var id_task = $(this).attr('num');
+            $.ajax({
+                url: '/todolist/' + id_task,
+                type: 'POST',
+                data: {
+                    isDone : '0'
+                },
+                success: function(response) {
+                    console.log(response);
+                    location.reload();
+                }
+            })
+        }
+    });
+});
+
+
+  </script>
+{% endblock %}
